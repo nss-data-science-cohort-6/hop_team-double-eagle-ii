@@ -1,0 +1,503 @@
+---
+title: "Family Med & Orthopedic Surgery"
+author: "Michial Miller"
+date: "2023-03-09"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(readr)
+library(viridis)
+library(scales)
+library(readxl)
+```
+
+```{r}
+family_med_and_ortho <- read.csv("family_med_and_ortho.csv")
+summary(family_med_and_ortho)
+
+family_med_and_ortho <- family_med_and_ortho %>% 
+  select(NPI, ProviderFirstName, ProviderLastName.LegalName., ProviderOrganizationName.LegalBusinessName., EntityTypeCode, HealthcareProviderTaxonomyCode, communityId, Grouping, Classification, Specialization, Display.Name, Section)
+
+family_med_and_ortho$NPI <- as.character(family_med_and_ortho$NPI)
+family_med_and_ortho$communityId <- as.character(family_med_and_ortho$communityId)
+```
+
+```{r}
+Nashville_Hop_from_communities <- read.csv("Nashville_Hop_from_communities.csv")
+summary(Nashville_Hop_from_communities)
+
+Nashville_Hop_from_communities$from_npi <- as.character(Nashville_Hop_from_communities$from_npi)
+Nashville_Hop_from_communities$to_npi <- as.character(Nashville_Hop_from_communities$to_npi)
+Nashville_Hop_from_communities <- Nashville_Hop_from_communities %>% 
+  select(from_npi, to_npi, patient_count, from_npi_First_Name, from_npi_Last_Name, from_npi_Facility_Name, from_npi_ProviderBusinessPracticeLocationAddressCityName, to_npi_First_Name, to_npi_Last_Name, to_npi_Facility_Name, to_npi_HealthcareProviderTaxonomyCode, to_npi_ProviderBusinessPracticeLocationAddressCityName, communityId)
+
+Nashville_Hop_from_communities %>% 
+  filter(communityId == '2410') %>% 
+  arrange(desc(patient_count))
+```
+
+
+```{r}
+family_med_and_ortho %>% 
+  group_by(communityId, Classification) %>% 
+  summarize(total_count = length(NPI)) %>% 
+  arrange(desc(total_count)) %>% 
+  ggplot(aes(x = reorder(communityId, -total_count), y = total_count, fill = Classification)) +
+  geom_col(color = 1, dodge = TRUE) +
+  labs(x = 'Community ID', y = 'Count') +
+  labs(title = "Family Med & Ortho Surgery NPI Count by Community ID") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+family_med_and_ortho %>% 
+  filter(Classification == 'Orthopaedic Surgery') %>% 
+  group_by(communityId, Classification) %>% 
+  summarize(total_count = length(NPI)) %>% 
+  arrange(desc(total_count)) %>% 
+  ggplot(aes(x = reorder(communityId, -total_count), y = total_count)) +
+  geom_col(color = 1, dodge = TRUE, fill = 'darkgreen') +
+  labs(x = 'Community ID', y = 'Count') +
+  labs(title = "Orthopaedic Surgery NPI Count by Community ID") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+family_med_and_ortho %>% 
+  filter(Classification == 'Family Medicine') %>% 
+  group_by(communityId) %>% 
+  summarize(total_count = length(ProviderOrganizationName.LegalBusinessName.)) %>% 
+  arrange(desc(total_count))  %>% 
+  ggplot(aes(x = reorder(communityId, -total_count), y = total_count)) +
+  geom_col(color = 1, dodge = TRUE, fill = 'orange') +
+  labs(x = 'Community ID', y = 'Count') +
+  labs(title = "Family Medicine NPI Count by Community ID") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+Nashville_Hop_from_communities %>% 
+  group_by()
+```
+
+
+```{r}
+two_four_one_zero <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2410') %>% 
+  group_by(from_npi_Facility_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+  
+two_four_one_zero[2:10,] %>%
+  ggplot(aes(y = reorder(from_npi_Facility_Name, total_from_npi), x  = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 2410 NPI Count by 'From NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_four_one_zero_from_last_name <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2410') %>% 
+  group_by(from_npi_Last_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+
+two_four_one_zero_from_last_name[2:10,] %>% 
+  ggplot(aes(y = reorder(from_npi_Last_Name, total_from_npi), x = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 2410 NPI Count by 'From NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+
+```{r}
+two_four_one_zero_to_npi <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2410') %>% 
+  group_by(to_npi_Facility_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+two_four_one_zero_to_npi[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Facility_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 2410 NPI Count by 'To NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_four_one_zero_to_Last_Name <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2410') %>% 
+  group_by(to_npi_Last_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+two_four_one_zero_to_Last_Name[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Last_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 2410 NPI Count by 'To NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+```{r}
+four_three_eight_four <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4435') %>% 
+  group_by(from_npi_Facility_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+  
+four_three_eight_four[2:10,] %>%
+  ggplot(aes(y = reorder(from_npi_Facility_Name, total_from_npi), x  = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 4435 NPI Count by 'From NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+four_four_three_five_from_Last_Name <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4435') %>% 
+  group_by(from_npi_Last_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+
+four_four_three_five_from_Last_Name[2:10,] %>% 
+  ggplot(aes(y = reorder(from_npi_Last_Name, total_from_npi), x = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 4435 NPI Count by 'From NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+four_four_three_five_to_npi <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4435') %>% 
+  group_by(to_npi_Facility_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+four_four_three_five_to_npi[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Facility_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 4435 NPI Count by 'To NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+four_four_three_five_to_Last_Name <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4435') %>% 
+  group_by(to_npi_Last_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+four_four_three_five_to_Last_Name[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Last_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 4435 NPI Count by 'To NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+```{r}
+two_six_eight_three <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2683') %>% 
+  group_by(from_npi_Facility_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+  
+two_six_eight_three[2:10,] %>%
+  ggplot(aes(y = reorder(from_npi_Facility_Name, total_from_npi), x  = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 2683 NPI Count by 'From NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_six_eight_three_from_last_name <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2683') %>% 
+  group_by(from_npi_Last_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+
+two_six_eight_three_from_last_name[2:10,] %>% 
+  ggplot(aes(y = reorder(from_npi_Last_Name, total_from_npi), x = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 2683 NPI Count by 'From NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_six_eight_three_to_Facility <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2683') %>% 
+  group_by(to_npi_Facility_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+two_six_eight_three_to_Facility[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Facility_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 2683 NPI Count by 'To NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_six_eight_three_to_Last_Name <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2683') %>% 
+  group_by(to_npi_Last_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+two_six_eight_three_to_Last_Name[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Last_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 2683 NPI Count by 'To NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+four_four_six_three <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4463') %>% 
+  group_by(from_npi_Facility_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+  
+four_four_six_three[2:10,] %>%
+  ggplot(aes(y = reorder(from_npi_Facility_Name, total_from_npi), x  = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 4463 NPI Count by 'From NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+four_four_six_three_from_Last <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4463') %>% 
+  group_by(from_npi_Last_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+
+four_four_six_three_from_Last[2:10,] %>% 
+  ggplot(aes(y = reorder(from_npi_Last_Name, total_from_npi), x = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 4463 NPI Count by 'From NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+four_four_six_three_to_Facility <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4463') %>% 
+  group_by(to_npi_Facility_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+four_four_six_three_to_Facility[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Facility_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 4463 NPI Count by 'To NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+four_four_six_three_to_Last <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '4463') %>% 
+  group_by(to_npi_Last_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+four_four_six_three_to_Last[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Last_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 4463 NPI Count by 'To NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_three_nine_six <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2396') %>% 
+  group_by(from_npi_Facility_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+  
+two_three_nine_six[2:10,] %>%
+  ggplot(aes(y = reorder(from_npi_Facility_Name, total_from_npi), x  = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 2396 NPI Count by 'From NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_three_nine_six_from_Last <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2396') %>% 
+  group_by(from_npi_Last_Name) %>% 
+  summarize(total_from_npi = length(from_npi)) %>% 
+  arrange(desc(total_from_npi))
+
+two_three_nine_six_from_Last[2:10,] %>% 
+  ggplot(aes(y = reorder(from_npi_Last_Name, total_from_npi), x = total_from_npi)) +
+  geom_col(color = 1, fill = 'blue') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 2396 NPI Count by 'From NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_three_nine_six_to_Facility <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2396') %>% 
+  group_by(to_npi_Facility_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+two_three_nine_six_to_Facility[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Facility_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Facility') +
+  labs(title = "Community 2396 NPI Count by 'To NPI' Facility") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+```{r}
+two_three_nine_six_to_Last <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2396') %>% 
+  group_by(to_npi_Last_Name) %>% 
+  summarize(total_to_npi = length(to_npi)) %>% 
+  arrange(desc(total_to_npi))
+  
+two_three_nine_six_to_Last[2:10,] %>% 
+  ggplot(aes(y = reorder(to_npi_Last_Name, total_to_npi), x = total_to_npi)) +
+  geom_col(color = 1, fill = 'green') +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right") +
+  labs(x = 'Count', y = 'Provider Last Name') +
+  labs(title = "Community 2396 NPI Count by 'To NPI' Provider Last Name") +
+  guides(x = guide_axis(angle = -90)) +
+  theme_gray(base_size = 10) +
+  theme(legend.position = "right")
+```
+
+
+```{r}
+two_four_one_zero_2 <- Nashville_Hop_from_communities %>% 
+  filter(communityId == '2410')
+
+summary(two_four_one_zero_2)
+```
+
+
